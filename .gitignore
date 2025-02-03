@@ -1,0 +1,13 @@
+.DS_Store
+.idea
+.vs
+.vscode
+*~
+*.o
+*.a
+*.la
+*.dll
+*.dylib
+*.tmp
+/simple
+/simple.exe
