@@ -9,15 +9,43 @@ import (
 	"time"
 )
 
-// APath is an absolute path reference in posix-notation that is constructed
-// with awareness of the filesystem attributes of the referenced resource,
-// i.e. whether it existed, whether it was a file or directory, its mtime,
-// and for files, their size.
+// APath guarantees a path string is absolute and in posix-separated notation. APaths
+// are constructed with Lstat info so we also know whether the path refered to an
+// extant item, and if so whether it was either a file, directory, or symlink, and
+// it's size/mtime.
+//
+// To refresh the metadata, use see Observe()/ObserveWithInfo.
 type APath struct {
 	APiece
 	atype APathType
 	mtime time.Time // the last-modified time
 	size  int64     // the size
+}
+
+// APathFromLStat forms an absolute path and then performs an Lstat on it to capture the
+// filesystem's metadata for that path. Use APathFromInfo when you have the info already.
+func APathFromLstat(pieces ...APiece) (*APath, error) {
+	abspath, err := resolvePieces(pieces...)
+	if err != nil {
+		return nil, err
+	}
+
+	apath := APath{abspath, ANotExist, time.Time{}, 0}
+	err = apath.Observe()
+	return &apath, err
+}
+
+// APathFromInfo forms an absolute path based on the given path component(s), and uses the
+// provided fs.FileInfo to set the filesystem attributes of the path. This is useful when
+// you are walking a filesystem and have already obtained the fs.FileInfo for the path.
+func APathFromInfo(info fs.FileInfo, infoErr error, pieces ...APiece) (*APath, error) {
+	abspath, err := resolvePieces(pieces...)
+	if err != nil {
+		return nil, err
+	}
+	apath := APath{abspath, ANotExist, time.Time{}, 0}
+	err = apath.ObserveWithInfo(info, infoErr)
+	return &apath, err
 }
 
 func (p *APath) Piece() APiece {
@@ -102,60 +130,10 @@ func resolvePieces(pieces ...APiece) (APiece, error) {
 	return fullpath, nil
 }
 
-// APathFromLStat forms an absolute path and then performs an Lstat on it to capture the
-// filesystem's metadata for that path. Use APathFromInfo when you have the info already.
-func APathFromLstat(pieces ...APiece) (*APath, error) {
-	abspath, err := resolvePieces(pieces...)
-	if err != nil {
-		return nil, err
-	}
-
-	apath := APath{abspath, ANotExist, time.Time{}, 0}
-	err = apath.Observe()
-	return &apath, err
-}
-
-// APathFromInfo forms an absolute path based on the given path component(s), and uses the
-// provided fs.FileInfo to set the filesystem attributes of the path. This is useful when
-// you are walking a filesystem and have already obtained the fs.FileInfo for the path.
-func APathFromInfo(info fs.FileInfo, infoErr error, pieces ...APiece) (*APath, error) {
-	abspath, err := resolvePieces(pieces...)
-	if err != nil {
-		return nil, err
-	}
-	apath := APath{abspath, ANotExist, time.Time{}, 0}
-	err = apath.ObserveWithInfo(info, infoErr)
-	return &apath, err
-}
-
 // Observe whether the file exists and capture its lstat data. Note that if
 // LStat returns a NotExist error, we treat this as data and return no error.
 func (p *APath) Observe() error {
 	return p.ObserveWithInfo(os.Lstat(p.APiece.String()))
-}
-
-// fileInfoToAPathType converts a fs.FileInfo to an APathType by inspecting
-// the mode of the file. If the fs.FileInfo is nil, it returns ANotExist.
-// Note that APathType considers symlinks a distinct type separate from
-// files and directories, as this makes life easier on Windows in most cases.
-func fileInfoToAPathType(info fs.FileInfo, err error) (APathType, error) {
-	if err != nil {
-		if !os.IsNotExist(err) {
-			return ANotExist, err
-		}
-		return ANotExist, nil
-	}
-	mode := info.Mode()
-	switch {
-	case mode.IsRegular():
-		return ATypeFile, nil
-	case mode.Type()&fs.ModeSymlink != 0:
-		return ATypeSymlink, nil
-	case mode.IsDir():
-		return ATypeDir, nil
-	default:
-		return ATypeUnknown, nil
-	}
 }
 
 // ObserveWithInfo refreshes the cached filesystem information for the path
@@ -163,18 +141,18 @@ func fileInfoToAPathType(info fs.FileInfo, err error) (APathType, error) {
 // Call this instead of Observe when you already have the fs.FileInfo.
 func (p *APath) ObserveWithInfo(info fs.FileInfo, err error) error {
 	p.atype, err = fileInfoToAPathType(info, err)
-	if p.atype == ANotExist || err != nil {
+	switch p.atype {
+	case ATypeDir:
+		p.mtime = info.ModTime()
+		p.size = 0
+		return nil
+	case ATypeFile:
+		p.mtime = info.ModTime()
+		p.size = info.Size()
+		return nil
+	default:
 		p.mtime = time.Time{}
 		p.size = 0
 		return err
 	}
-
-	p.mtime = info.ModTime()
-	if p.atype == ATypeDir {
-		p.size = 0
-	} else {
-		p.size = info.Size()
-	}
-
-	return nil
 }

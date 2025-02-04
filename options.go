@@ -7,7 +7,7 @@ import "runtime"
 // your inputs (files, network, config, command line, etc) might have winslashes.
 //
 // Only affects newly-created APieces. See also WithPossibleWindowsSlashes.
-var ExpectWindowsSlashes = runtime.GOOS == "windows"
+var ExpectWindowsSlashes bool = runtime.GOOS == "windows"
 
 // WithPossibleWindowsSlashes sets ExpectWindowsSlashes to true and returns a capture
 // that will reset it to its original state, so you can temporarily enable it with defer.

@@ -1,7 +1,7 @@
 // Interfaces
 package apathy
 
-// PiecemMeal is any type that can present an APiece rendering of itself, i.e. a
+// PieceMeal is any type that can present an APiece rendering of itself, i.e. a
 // path.Clean() representation of some path component.
 type PieceMeal interface {
 	Piece() APiece
