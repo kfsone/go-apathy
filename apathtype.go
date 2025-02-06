@@ -17,6 +17,21 @@ const (
 	ATypeUnknown
 )
 
+func (a APathType) String() string {
+	switch a {
+	case ANotExist:
+		return "NotExist"
+	case ATypeFile:
+		return "File"
+	case ATypeDir:
+		return "Dir"
+	case ATypeSymlink:
+		return "Symlink"
+	default:
+		return "Unknown"
+	}
+}
+
 // fileInfoToAPathType converts a fs.FileInfo to an APathType by inspecting
 // the mode of the file. If the fs.FileInfo is nil, it returns ANotExist.
 // Note that APathType considers symlinks a distinct type separate from

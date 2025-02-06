@@ -26,6 +26,8 @@ func (m mockFileInfo) IsDir() bool        { return m.mode.IsDir() }
 func (m mockFileInfo) Sys() interface{}   { return nil }
 
 func Test_fileInfoToAPathType(t *testing.T) {
+	t.Parallel()
+
 	tests := []struct {
 		name     string
 		info     fs.FileInfo
@@ -107,6 +109,25 @@ func Test_fileInfoToAPathType(t *testing.T) {
 			}
 
 			assert.Equal(t, tt.wantType, gotType)
+		})
+	}
+}
+
+func TestAPathType(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		info APathType
+		name string
+	}{
+		{ANotExist, "NotExist"},
+		{ATypeFile, "File"},
+		{ATypeDir, "Dir"},
+		{ATypeSymlink, "Symlink"},
+		{ATypeUnknown, "Unknown"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.name, tc.info.String())
 		})
 	}
 }

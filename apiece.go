@@ -1,40 +1,52 @@
-// APiece encapsulates a string with the guarantee that any path separators it has
-// had any old Windows-style path-separators ('\\') transformed to posix-style ('/'),
-// and that it has undergone a path.Clean() operation.
-//
-// Modern Windows is happy to accept posix-style paths in most places, and knowing
-// the string is already clean allows various optimizations and simplifications
-// in path manipulation.
 package apathy
 
 import (
 	"path"
-	"path/filepath"
-	"runtime"
 	"strings"
 )
 
-// APiece is a path component with posix-slashes and path.Clean()d.
+// APiece is a string intended for file-system path construction but with the
+// guarantee that it has been sanitized by having path-separators normalized to
+// the posix style ('/') and undergone a path.Clean() operation.
+//
+// Modern Windows is happy to accept posix-style paths in most places, and knowing
+// the string is already clean allows various optimizations and simplifications
+// in path manipulation.
+//
+// Example
+//
+//	// Without Apathy
+//	p1, err := filepath.Abs(filepath.Clean(filepath.Join(f1, f2)))
+//	// ...
+//	p2, err := filepath.Abs(filepath.Clean(filepath.Join(f1, f3))  // recleaning f1?
+//
+//	// With Apathy
+//	a1, err := apathy.NewAPath(f1),
+//	p1 := apathy.NewAPiece(f2)
+//	...
+//	a2, err := apathy.NewAPath(a1, p1)
 type APiece string
 
 // NewAPiece cleans the given string and ensures it is in posix-form,
 // regardless of the platform the code is running on.
 func NewAPiece(str string) APiece {
-	// If we're on a posix system, it won't actually try and replace windows
-	// slashes with posix slashes.
-	if ExpectWindowsSlashes {
-		str = strings.ReplaceAll(str, "\\", "/")
-		// Special case for 'C: and 'C:/'.
+	str = ToSlash(str)
+
+	// For windows filepaths, an absolute drive root is `<letter>:/`, but clean
+	// might interfere with the trailing slash. If this is an absolute drive
+	// reference without a path, don't clean it.
+	if len(str) <= 3 {
 		piece := APiece(str)
 		if hasAbsDrive(piece) {
 			return piece
 		}
 	}
-	str = path.Clean(str)
-	return APiece(str)
+
+	// Ok, tidy away, and that's a piece.
+	return APiece(path.Clean(str))
 }
 
-// Piece returns the the APiece representation of this path component.
+// Piece returns the APiece representation of this path component.
 func (p APiece) Piece() APiece {
 	return p
 }
@@ -48,6 +60,8 @@ func (p APiece) String() string {
 func (p APiece) Len() int {
 	return len(p)
 }
+
+// Helpers.
 
 // Simple drive-letter check, does not handle UNC paths or powershell mount names.
 func hasDriveLetter(p APiece) bool {
@@ -66,22 +80,5 @@ func (p APiece) IsAbs() bool {
 	if len(p) >= 1 && p[0] == '/' {
 		return true
 	}
-	return ExpectWindowsSlashes && hasAbsDrive(p)
-}
-
-// ToNative returns the native rendering of the path component, which means on windows
-// the '/'s are replaced with '\'s. When ExpectWindowsSlashes is true on a Posix
-// host, it will replace '/'s with '\\'s for paths that start with a drive letter.
-// Windows note: When using Windows 10 or above, most filesystem APIs and programs
-// are happy to accept posix-style paths, so you may not need to call this function.
-func (p APiece) ToNative() string {
-	if ExpectWindowsSlashes {
-		if runtime.GOOS == "windows" {
-			return filepath.Clean(p.String())
-		}
-		if hasDriveLetter(p) {
-			return strings.ReplaceAll(p.String(), "/", "\\")
-		}
-	}
-	return p.String()
+	return hasAbsDrive(p)
 }
