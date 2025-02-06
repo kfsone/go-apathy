@@ -11,3 +11,6 @@
 *.tmp
 /simple
 /simple.exe
+cover.out
+cover.html
+.coverage/
