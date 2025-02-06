@@ -77,12 +77,14 @@ func TestAPiece_Dir(t *testing.T) {
 		{".", "ab"},	// test len==2 case
 		{".", "abc"},	// test len==3 case
 		{"a", "a/b"}, 
-		{"T:/", "T:"},
-		{"c:/", "c:"},
+		{"T:/", "T:/"},
+		{"T:", "T:"},
 		{"A:", "A:."},
 		{"B:", "B:x"},
 		{"u:/", "u:/"},
 		{"S:", "S:xyz"},
+		{"c:/", "c:/windows"},
+		{"c:windows/system32", "c:windows/system32/drivers"},
 		{"/", "/"},
 		{"/etc/apt", "/etc/apt/apt.d"},
 	} {

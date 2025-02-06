@@ -1,3 +1,6 @@
+v0.2.4 2025/02/05
+- fixed Dir()s behavior with e.g C:/
+
 v0.2.3 2025/02/05
 - fixed Dir() interaction with drive roots
 
