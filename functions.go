@@ -2,6 +2,7 @@
 package apathy
 
 import (
+	"path"
 	"strings"
 )
 
@@ -57,4 +58,16 @@ func ToSlash[Str ~string](path Str) string {
 		}
 		return r
 	}, string(path))
+}
+
+func Base(piece Piecer) APiece {
+	return APiece(path.Base(piece.Piece().String()))
+}
+
+func Dir(piece Piecer) APiece {
+	return APiece(path.Dir(piece.Piece().String()))
+}
+
+func Ext(piece Piecer) APiece {
+	return APiece(path.Ext(piece.Piece().String()))
 }

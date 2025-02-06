@@ -94,15 +94,6 @@ func Test_aPath_Accessors(t *testing.T) {
 	}
 }
 
-func Test_aPath_Helpers(t *testing.T) {
-	t.Parallel()
-
-	a := aPath{"/usr/lib/postgres/fire.theres_actual_fire", ANotExist, time.Time{}, 0}
-	assert.Equal(t, "fire.theres_actual_fire", a.Base().String())
-	assert.Equal(t, "/usr/lib/postgres", a.Dir().String())
-	assert.Equal(t, ".theres_actual_fire", a.Ext().String())
-}
-
 func Test_aPath_resolvePieces_error(t *testing.T) {
 	var myError = errors.New("disk full")
 	defer withSaved(&Abs, func(string) (string, error) {
@@ -216,6 +207,7 @@ func Test_newAPathWith_Exists(t *testing.T) {
 }
 
 func TestNewAPath_PanicsOnZeroPieces(t *testing.T) {
+	t.Parallel()
 	assert.Panics(t, func() {
 		_, _ = NewAPath()
 	})

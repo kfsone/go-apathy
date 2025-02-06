@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
-	"path"
 	"path/filepath"
 	"time"
 )
@@ -111,21 +110,6 @@ func (p *aPath) IsFile() bool {
 // IsDir returns true if the last LStat of the filesystem object found a regular directory.
 func (p *aPath) IsDir() bool {
 	return p.aType == ATypeDir
-}
-
-// Base returns the last component of the path.
-func (p *aPath) Base() APiece {
-	return APiece(path.Base(p.APiece.String()))
-}
-
-// Dir returns the directory component of the path.
-func (p *aPath) Dir() APiece {
-	return APiece(path.Dir(p.APiece.String()))
-}
-
-// Ext returns the file extension of the path.
-func (p *aPath) Ext() APiece {
-	return APiece(path.Ext(p.APiece.String()))
 }
 
 // resolvePieces will combine several pieces into an absolute path.

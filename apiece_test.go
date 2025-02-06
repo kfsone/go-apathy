@@ -15,6 +15,7 @@ type apieceTestCase struct {
 }
 
 func TestNewAPiece_Basic(t *testing.T) {
+	t.Parallel()
 	// NewAPiece should always transform backslashes to slash and - unless this
 	// is a drive-root-reference, e.g. x:/ or c:, running a clean. We don't need
 	// to extensively test path.Clean here.
@@ -101,6 +102,8 @@ func TestAPiece_IsAbs(t *testing.T) {
 }
 
 func TestApiece_Normalize(t *testing.T) {
+	t.Parallel()
+
 	// This is kind of the point of go-apathy, this should be about the only place in the tests
 	// that we see any kind of platform variance.
 	var nativeSep = "/"

@@ -28,6 +28,8 @@ func TestGetAwd(t *testing.T) {
 }
 
 func TestJoin(t *testing.T) {
+	t.Parallel()
+
 	for _, tc := range []struct {
 		name      string
 		inputs    []string
@@ -47,10 +49,21 @@ func TestJoin(t *testing.T) {
 }
 
 func TestNormalize(t *testing.T) {
+	t.Parallel()
+
 	// Normalize is just a wrapper for Piece.Normalize, so we're just testing
 	// basic pass-through.
 
 	// Something that shouldn't change:
 	piece := APiece("C:/Windows/System16")
 	assert.Equal(t, "C:\\Windows\\System16", Normalize(piece))
+}
+
+func TestAPieceHelpers(t *testing.T) {
+	t.Parallel()
+
+	a := &aPath{"/usr/lib/postgres/fire.theres_actual_fire", ANotExist, fixedTime, 0}
+	assert.Equal(t, "fire.theres_actual_fire", Base(a).String())
+	assert.Equal(t, "/usr/lib/postgres", Dir(a).String())
+	assert.Equal(t, ".theres_actual_fire", Ext(a).String())
 }
