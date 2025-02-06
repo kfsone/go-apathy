@@ -67,3 +67,28 @@ func TestAPieceHelpers(t *testing.T) {
 	assert.Equal(t, "/usr/lib/postgres", Dir(a).String())
 	assert.Equal(t, ".theres_actual_fire", Ext(a).String())
 }
+
+func TestAPiece_Dir(t *testing.T) {
+	t.Parallel()
+	// The windows paths x: and x:/anything need to return x:/ as their parent.
+	for _, tc := range [][]APiece {
+		{".", "."},
+		{".", "a"},
+		{".", "ab"},	// test len==2 case
+		{".", "abc"},	// test len==3 case
+		{"a", "a/b"}, 
+		{"T:/", "T:"},
+		{"c:/", "c:"},
+		{"A:", "A:."},
+		{"B:", "B:x"},
+		{"u:/", "u:/"},
+		{"S:", "S:xyz"},
+		{"/", "/"},
+		{"/etc/apt", "/etc/apt/apt.d"},
+	} {
+		t.Run(tc[0].String(), func (t *testing.T) {
+			parent := Dir(tc[1])
+			assert.Equal(t, tc[0], parent)
+		})
+	}
+}

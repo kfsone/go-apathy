@@ -1,4 +1,14 @@
-v0.2 2025/02/05 cleanup, more tests, focus
+v0.2.3 2025/02/05
+- fixed Dir() interaction with drive roots
+
+v0.2.2 2025/02/05
+- fixed sneaky omission of Lengthed from APath interfaces
+
+v0.2.1 2025/02/05
+- moved aPath helper methods to free functions
+
+v0.2 2025/02/05
+cleanup, more tests, focus
 - 100% test coverage
 - APathFrom... methods became NewAPath(pieces...) and NewAPathFromFile(abspath, info, err)
 - APath became an interface with concerete 'aPath' as the base

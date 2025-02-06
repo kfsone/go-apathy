@@ -64,8 +64,31 @@ func Base(piece Piecer) APiece {
 	return APiece(path.Base(piece.Piece().String()))
 }
 
-func Dir(piece Piecer) APiece {
-	return APiece(path.Dir(piece.Piece().String()))
+func Dir(piecer Piecer) APiece {
+	// Windows paths such as 'x:' and 'x:/' need to return 'x:/' as their
+	// path.
+	piece := piecer.Piece()
+	switch piece.Len() {
+	case 2: // e.g c:
+		if hasDriveLetter(piece) {
+			return APiece(piece.String() + "/")
+		}
+	case 3: // e.g. c:/
+		if hasDriveLetter(piece) {
+			// c:/ -> c:/
+			if piece.String()[2] == '/' {
+				return piece
+			}
+			// Anything else is just c:
+			return APiece(piece.String()[:2])
+		}
+	}
+	result := APiece(path.Dir(piece.String()))
+	// x:something's parent is x:, rather than .
+	if result == "." && hasDriveLetter(piece) {
+		result = APiece(piece.String()[:2])
+	}
+	return result
 }
 
 func Ext(piece Piecer) APiece {
