@@ -22,6 +22,7 @@ type APath interface {
 	Sized
 	Normalizer
 	Piecer
+	Lengthed
 	Stringer
 	Type() APathType
 }
