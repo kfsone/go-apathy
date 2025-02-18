@@ -27,6 +27,16 @@ import (
 //	a2, err := apathy.NewAPath(a1, p1)
 type APiece string
 
+
+// WindowsDrivePrefixLen provides named constant when we want to test string lengths
+// for potentially representing a drive, e.g C:
+const WindowsDriveLen = len("C:")
+
+// WindowsDrivePrefixLen provides named constant when we want to test string lengths
+// for potentially representing a drive's root, e.g. C:/
+const WindowsDriveRootLen = len("C:/")
+
+
 // NewAPiece cleans the given string and ensures it is in posix-form,
 // regardless of the platform the code is running on.
 func NewAPiece(str string) APiece {
@@ -35,7 +45,7 @@ func NewAPiece(str string) APiece {
 	// For windows filepaths, an absolute drive root is `<letter>:/`, but clean
 	// might interfere with the trailing slash. If this is an absolute drive
 	// reference without a path, don't clean it.
-	if len(str) <= 3 {
+	if len(str) <= WindowsDriveRootLen {
 		piece := APiece(str)
 		if hasAbsDrive(piece) {
 			return piece
@@ -65,7 +75,7 @@ func (p APiece) Len() int {
 
 // Simple drive-letter check, does not handle UNC paths or powershell mount names.
 func hasDriveLetter(p APiece) bool {
-	if len(p) < 2 || p[1] != ':' {
+	if len(p) < WindowsDriveLen || p[WindowsDriveLen-1] != ':' {
 		return false
 	}
 	letter := strings.ToLower(string(p[0]))
@@ -73,7 +83,7 @@ func hasDriveLetter(p APiece) bool {
 }
 
 func hasAbsDrive(p APiece) bool {
-	return len(p) >= 3 && p[2] == '/' && hasDriveLetter(p)
+	return len(p) >= WindowsDriveRootLen && p[WindowsDriveRootLen-1] == '/' && hasDriveLetter(p)
 }
 
 func (p APiece) IsAbs() bool {
